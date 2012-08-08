@@ -21,48 +21,39 @@
  */
 package desc
 
-import (
-	"math"
-)
+import "math"
 
-type FirstMoment struct {
-	n    int
-	m1   float64
-	dev  float64
-	nDev float64
+type StandardDeviation struct {
+	vr *Variance
 }
 
-func NewFirstMoment() *FirstMoment {
-	return &FirstMoment{
-		n:    0,
-		m1:   math.NaN(),
-		dev:  math.NaN(),
-		nDev: math.NaN(),
-	}
+func NewStandardDeviation() *StandardDeviation {
+	vr := NewVariance()
+	return &StandardDeviation{vr: vr}
 }
 
-func (fm *FirstMoment) Increment(d float64) {
-	if fm.n == 0 {
-		fm.m1 = 0
-	}
-	fm.n++
-	n0 := fm.n
-	fm.dev = d - fm.m1
-	fm.nDev = fm.dev / float64(n0)
-	fm.m1 += fm.nDev
+func NewStandardDeviationWithBiasCorrection() *StandardDeviation {
+	sd := NewStandardDeviation()
+	sd.SetBiasCorrection(true)
+	return sd
 }
 
-func (fm *FirstMoment) Clear() {
-	fm.m1 = math.NaN()
-	fm.n = 0
-	fm.dev = math.NaN()
-	fm.nDev = math.NaN()
+func (sd *StandardDeviation) Increment(d float64) {
+	sd.vr.Increment(d)
 }
 
-func (fm *FirstMoment) GetResult() float64 {
-	return fm.m1
+func (sd *StandardDeviation) GetResult() float64 {
+	return math.Sqrt(sd.vr.GetResult())
 }
 
-func (fm *FirstMoment) GetN() int {
-	return fm.n
+func (sd *StandardDeviation) GetN() int {
+	return sd.vr.GetN()
+}
+
+func (sd *StandardDeviation) Clear() {
+	sd.vr.Clear()
+}
+
+func (sd *StandardDeviation) SetBiasCorrection(b bool) {
+	sd.vr.SetBiasCorrection(b)
 }

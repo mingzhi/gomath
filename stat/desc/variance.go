@@ -21,48 +21,53 @@
  */
 package desc
 
-import (
-	"math"
-)
+import "math"
 
-type FirstMoment struct {
-	n    int
-	m1   float64
-	dev  float64
-	nDev float64
+type Variance struct {
+	isBiasCorrected bool
+	moment          *SecondMoment
 }
 
-func NewFirstMoment() *FirstMoment {
-	return &FirstMoment{
-		n:    0,
-		m1:   math.NaN(),
-		dev:  math.NaN(),
-		nDev: math.NaN(),
+func NewVariance() *Variance {
+	moment := NewSecondMoment()
+	return &Variance{
+		moment: moment,
 	}
 }
 
-func (fm *FirstMoment) Increment(d float64) {
-	if fm.n == 0 {
-		fm.m1 = 0
+func NewVarianceWithBiasCorrection() *Variance {
+	v := NewVariance()
+	v.SetBiasCorrection(true)
+	return v
+}
+
+func (v *Variance) Increment(d float64) {
+	v.moment.Increment(d)
+}
+
+func (v *Variance) GetResult() (r float64) {
+	if v.moment.GetN() == 0 {
+		r = math.NaN()
+	} else if v.moment.GetN() == 1 {
+		r = 0.0
+	} else {
+		if v.isBiasCorrected {
+			r = v.moment.GetResult() / (float64(v.moment.GetN() - 1.0))
+		} else {
+			r = v.moment.GetResult() / float64(v.moment.GetN())
+		}
 	}
-	fm.n++
-	n0 := fm.n
-	fm.dev = d - fm.m1
-	fm.nDev = fm.dev / float64(n0)
-	fm.m1 += fm.nDev
+	return
 }
 
-func (fm *FirstMoment) Clear() {
-	fm.m1 = math.NaN()
-	fm.n = 0
-	fm.dev = math.NaN()
-	fm.nDev = math.NaN()
+func (v *Variance) GetN() int {
+	return v.moment.GetN()
 }
 
-func (fm *FirstMoment) GetResult() float64 {
-	return fm.m1
+func (v *Variance) Clear() {
+	v.moment.Clear()
 }
 
-func (fm *FirstMoment) GetN() int {
-	return fm.n
+func (v *Variance) SetBiasCorrection(b bool) {
+	v.isBiasCorrected = b
 }
