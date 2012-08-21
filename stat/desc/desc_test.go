@@ -22,7 +22,7 @@
 package desc
 
 import (
-	"bitbucket.org/mingzhi/goutils/assert"
+	"github.com/mingzhi/goutils/assert"
 	"math"
 	"testing"
 )
