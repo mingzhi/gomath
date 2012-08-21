@@ -22,52 +22,58 @@
 package desc
 
 import (
-	"fmt"
+	"math"
 )
 
-type StorelessUnivariateStatistic interface {
-	Increment(float64)
-	GetResult() float64
-	GetN() int
-	Clear()
+type Min struct {
+	n int
+	v float64
 }
 
-type Error struct {
-	Message string
-	Status  int
+func NewMin() *Min {
+	return &Min{n: 0, v: math.NaN()}
 }
 
-const (
-	_ = iota
-	NotPositive
-	NumberIsTooLarge
-	DimentionMismatch
-)
-
-func (err Error) Error() string {
-	return fmt.Sprintf("Message: %s, Status: %d", err.Message, err.Status)
+func (min Min) GetN() int {
+	return min.n
 }
 
-func test(values []float64, begin, length int, allowEmpty bool) (ok bool, err error) {
-	if begin < 0 {
-		err = Error{Message: "Begin index is not positive", Status: NotPositive}
-		return
-	}
+func (min Min) GetResult() float64 {
+	return min.v
+}
 
-	if length < 0 {
-		err = Error{Message: "Length is not positive", Status: NotPositive}
-		return
+func (min *Min) Increment(x float64) {
+	if x < min.v || math.IsNaN(min.v) {
+		min.v = x
 	}
+	min.n++
+}
 
-	if begin+length > len(values) {
-		err = Error{Message: "Number is too large", Status: NumberIsTooLarge}
-		return
+func (min *Min) IncrementAll(values []float64, begin, length int) {
+	allowEmpty := true
+	ok, err := test(values, begin, length, allowEmpty)
+	if ok && err == nil {
+		for i := 0; i < begin+length; i++ {
+			if !math.IsNaN(values[i]) {
+				min.Increment(values[i])
+			}
+			min.n++
+		}
 	}
+}
 
-	if length == 0 && !allowEmpty {
-		return
+func EvaluateMin(values []float64, begin, length int) float64 {
+	allowEmpty := true
+	min := math.NaN()
+	ok, err := test(values, begin, length, allowEmpty)
+	if ok && err == nil {
+		for i := 0; i < begin+length; i++ {
+			if !math.IsNaN(values[i]) {
+				if values[i] < min || math.IsNaN(min) {
+					min = values[i]
+				}
+			}
+		}
 	}
-
-	ok = true
-	return
+	return min
 }

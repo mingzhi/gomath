@@ -22,52 +22,40 @@
 package desc
 
 import (
-	"fmt"
+	"github.com/mingzhi/goutils/assert"
+	"math"
+	"testing"
 )
 
-type StorelessUnivariateStatistic interface {
-	Increment(float64)
-	GetResult() float64
-	GetN() int
-	Clear()
-}
-
-type Error struct {
-	Message string
-	Status  int
-}
-
-const (
-	_ = iota
-	NotPositive
-	NumberIsTooLarge
-	DimentionMismatch
-)
-
-func (err Error) Error() string {
-	return fmt.Sprintf("Message: %s, Status: %d", err.Message, err.Status)
-}
-
-func test(values []float64, begin, length int, allowEmpty bool) (ok bool, err error) {
-	if begin < 0 {
-		err = Error{Message: "Begin index is not positive", Status: NotPositive}
-		return
+func TestMaxSpecialValues(t *testing.T) {
+	testArray := []float64{0.0, math.NaN(), math.Inf(-1), math.Inf(0)}
+	max := NewMax()
+	if !math.IsNaN(max.GetResult()) {
+		t.Error("Max: it should be NaN")
 	}
 
-	if length < 0 {
-		err = Error{Message: "Length is not positive", Status: NotPositive}
-		return
+	max.Increment(testArray[0])
+	if !assert.EqualFloat64(max.GetResult(), 0.0, 1e-10, 1) {
+		t.Errorf("Max: result: %f, but expect: %f", max.GetResult(), 0.0)
 	}
 
-	if begin+length > len(values) {
-		err = Error{Message: "Number is too large", Status: NumberIsTooLarge}
-		return
+	max.Increment(testArray[1])
+	if !assert.EqualFloat64(max.GetResult(), 0.0, 1e-10, 1) {
+		t.Errorf("Max: result: %f, but expect: %f", max.GetResult(), 0.0)
 	}
 
-	if length == 0 && !allowEmpty {
-		return
+	max.Increment(testArray[2])
+	if !assert.EqualFloat64(max.GetResult(), 0.0, 1e-10, 1) {
+		t.Errorf("Max: result: %f, but expect: %f", max.GetResult(), 0.0)
 	}
 
-	ok = true
-	return
+	max.Increment(testArray[3])
+	if !assert.EqualFloat64(max.GetResult(), math.Inf(0), 1e-10, 1) {
+		t.Errorf("Max: result: %f, but expect: %f", max.GetResult(), math.Inf(0))
+	}
+
+	maxV := EvaluateMax(testArray, 0, len(testArray))
+	if !assert.EqualFloat64(maxV, math.Inf(0), 1e-10, 1) {
+		t.Errorf("Max: result: %f, but expect: %f", maxV, math.Inf(0))
+	}
 }

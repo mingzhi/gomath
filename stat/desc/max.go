@@ -22,52 +22,65 @@
 package desc
 
 import (
-	"fmt"
+	"math"
 )
 
-type StorelessUnivariateStatistic interface {
-	Increment(float64)
-	GetResult() float64
-	GetN() int
-	Clear()
+type Max struct {
+	n int
+	v float64
 }
 
-type Error struct {
-	Message string
-	Status  int
+func NewMax() *Max {
+	return &Max{n: 0, v: math.NaN()}
 }
 
-const (
-	_ = iota
-	NotPositive
-	NumberIsTooLarge
-	DimentionMismatch
-)
-
-func (err Error) Error() string {
-	return fmt.Sprintf("Message: %s, Status: %d", err.Message, err.Status)
+func (max *Max) Increment(x float64) {
+	if x > max.v || math.IsNaN(max.v) {
+		max.v = x
+	}
+	max.n++
 }
 
-func test(values []float64, begin, length int, allowEmpty bool) (ok bool, err error) {
-	if begin < 0 {
-		err = Error{Message: "Begin index is not positive", Status: NotPositive}
-		return
+func (max *Max) IncrementAll(values []float64, begin, length int) {
+	allowEmpty := true
+	ok, err := test(values, begin, length, allowEmpty)
+	if ok && err == nil {
+		for i := begin; i < begin+length; i++ {
+			if !math.IsNaN(values[i]) {
+				max.Increment(values[i])
+			}
+		}
+	}
+}
+
+func (max *Max) Clean() {
+	max.n = 0
+	max.v = math.NaN()
+}
+
+func (max *Max) GetResult() float64 {
+	return max.v
+}
+
+func (max *Max) GetN() int {
+	return max.n
+}
+
+func EvaluateMax(values []float64, begin, length int) (max float64) {
+	max = math.NaN()
+
+	allowEmpty := true
+	ok, err := test(values, begin, length, allowEmpty)
+	if ok && err == nil {
+		max = values[begin]
+		for i := begin; i < begin+length; i++ {
+			if !math.IsNaN(values[i]) {
+				if max < values[i] || math.IsNaN(max) {
+					max = values[i]
+				}
+			}
+		}
 	}
 
-	if length < 0 {
-		err = Error{Message: "Length is not positive", Status: NotPositive}
-		return
-	}
-
-	if begin+length > len(values) {
-		err = Error{Message: "Number is too large", Status: NumberIsTooLarge}
-		return
-	}
-
-	if length == 0 && !allowEmpty {
-		return
-	}
-
-	ok = true
 	return
 }

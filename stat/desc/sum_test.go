@@ -22,52 +22,34 @@
 package desc
 
 import (
-	"fmt"
+	"github.com/mingzhi/goutils/assert"
+	"math"
+	"testing"
 )
 
-type StorelessUnivariateStatistic interface {
-	Increment(float64)
-	GetResult() float64
-	GetN() int
-	Clear()
-}
-
-type Error struct {
-	Message string
-	Status  int
-}
-
-const (
-	_ = iota
-	NotPositive
-	NumberIsTooLarge
-	DimentionMismatch
-)
-
-func (err Error) Error() string {
-	return fmt.Sprintf("Message: %s, Status: %d", err.Message, err.Status)
-}
-
-func test(values []float64, begin, length int, allowEmpty bool) (ok bool, err error) {
-	if begin < 0 {
-		err = Error{Message: "Begin index is not positive", Status: NotPositive}
-		return
+func TestSumSpecialValues(t *testing.T) {
+	sum := NewSum()
+	if !assert.EqualFloat64(0.0, sum.GetResult(), 1e-10, 1) {
+		t.Errorf("Sum: result: %f, but expect: %f\n", sum.GetResult(), 0.0)
 	}
 
-	if length < 0 {
-		err = Error{Message: "Length is not positive", Status: NotPositive}
-		return
+	sum.Increment(1.0)
+	if !assert.EqualFloat64(1.0, sum.GetResult(), 1e-10, 1) {
+		t.Errorf("Sum: result: %f, but expect: %f\n", sum.GetResult(), 1.0)
 	}
 
-	if begin+length > len(values) {
-		err = Error{Message: "Number is too large", Status: NumberIsTooLarge}
-		return
+	sum.Increment(math.Inf(0))
+	if !assert.EqualFloat64(math.Inf(0), sum.GetResult(), 1e-10, 1) {
+		t.Errorf("Sum: result: %f, but expect: %f\n", sum.GetResult(), math.Inf(0))
 	}
 
-	if length == 0 && !allowEmpty {
-		return
+	sum.Increment(math.Inf(-1))
+	if !math.IsNaN(sum.GetResult()) {
+		t.Error("Sum: result should be NaN")
 	}
 
-	ok = true
-	return
+	sum.Increment(1.0)
+	if !math.IsNaN(sum.GetResult()) {
+		t.Error("Sum: result should be NaN")
+	}
 }

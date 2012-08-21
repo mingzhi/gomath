@@ -21,53 +21,54 @@
  */
 package desc
 
-import (
-	"fmt"
-)
-
-type StorelessUnivariateStatistic interface {
-	Increment(float64)
-	GetResult() float64
-	GetN() int
-	Clear()
+type Sum struct {
+	n int
+	v float64
 }
 
-type Error struct {
-	Message string
-	Status  int
-}
-
-const (
-	_ = iota
-	NotPositive
-	NumberIsTooLarge
-	DimentionMismatch
-)
-
-func (err Error) Error() string {
-	return fmt.Sprintf("Message: %s, Status: %d", err.Message, err.Status)
-}
-
-func test(values []float64, begin, length int, allowEmpty bool) (ok bool, err error) {
-	if begin < 0 {
-		err = Error{Message: "Begin index is not positive", Status: NotPositive}
-		return
-	}
-
-	if length < 0 {
-		err = Error{Message: "Length is not positive", Status: NotPositive}
-		return
-	}
-
-	if begin+length > len(values) {
-		err = Error{Message: "Number is too large", Status: NumberIsTooLarge}
-		return
-	}
-
-	if length == 0 && !allowEmpty {
-		return
-	}
-
-	ok = true
+func NewSum() (sum *Sum) {
+	sum = &Sum{n: 0, v: 0}
 	return
+}
+
+func (sum *Sum) Increment(x float64) {
+	sum.v += x
+	sum.n++
+}
+
+func (sum *Sum) GetResult() float64 {
+	return sum.v
+}
+
+func (sum *Sum) GetN() int {
+	return sum.n
+}
+
+func (sum *Sum) Clear() {
+	sum.n = 0
+	sum.v = 0
+}
+
+func (sum *Sum) IncrementAll(values []float64, begin, length int) {
+	allowEmpty := true
+	ok, err := test(values, begin, length, allowEmpty)
+	if ok && err == nil {
+		k := begin + length
+		for i := begin; i < k; i++ {
+			x := values[i]
+			sum.Increment(x)
+		}
+	}
+}
+
+func (sum *Sum) IncrementAllWithWeigths(values, weights []float64, begin, length int) {
+	allowEmpty := true
+	ok, err := test(values, begin, length, allowEmpty)
+	if ok && err == nil {
+		k := begin + length
+		for i := begin; i < k; i++ {
+			x := values[i] * weights[i]
+			sum.Increment(x)
+		}
+	}
 }
