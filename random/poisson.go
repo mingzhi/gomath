@@ -32,8 +32,10 @@ const (
 
 // A Poisson distribution.
 type Poisson struct {
-	Mean          float64
+	Mean float64
+
 	randGenerator RandomEngine
+	stream        chan int
 
 	// precomputed and cached values (for performance only)
 	// cached for < SWICH_MEAN
@@ -60,6 +62,10 @@ func NewPoisson(mean float64, randGenerator RandomEngine) (poisson *Poisson) {
 	poisson.my_old = -1.0
 	poisson.my_last = -1.0
 	poisson.pp = make([]float64, 36)
+
+	poisson.stream = make(chan int)
+	go poisson.run()
+
 	return
 }
 
@@ -80,6 +86,20 @@ func (poisson *Poisson) Seed(seed int64) {
 }
 
 // Int returns a non-negative pseudo-random int from a poisson distribution.
+func (poisson *Poisson) Int() (k int) {
+	k = <-poisson.stream
+	return
+}
+
+// Run keeps generating random number into the channel.
+func (poisson *Poisson) run() {
+	for {
+		k := poisson.random()
+		poisson.stream <- k
+	}
+}
+
+// Generate poisson random number
 // Implementation: High performance implementation.
 // Patchwork Rejection/Inversion method.
 // This is a port of Poisson.java from the colt java library, which is based upon
@@ -88,7 +108,7 @@ func (poisson *Poisson) Seed(seed int64) {
 // Also see
 // Stadlober E., H. Zechner (1999), The patchwork rejection method for sampling from unimodal distributions,
 // to appear in ACM Transactions on Modelling and Simulation.
-func (poisson *Poisson) Int() (k int) {
+func (poisson *Poisson) random() (k int) {
 	/******************************************************************
 	 *                                                                *
 	 * Poisson Distribution - Patchwork Rejection/Inversion           *
@@ -319,6 +339,7 @@ func (poisson *Poisson) Int() (k int) {
 	return
 }
 
+// Helper function
 func (poisson Poisson) f(k int, l_nu, c_pm float64) float64 {
 	return math.Exp(float64(k)*l_nu - specfunc.LogFactorial(k) - c_pm)
 }
