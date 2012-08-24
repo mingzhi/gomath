@@ -61,6 +61,27 @@ func TestExponential(t *testing.T) {
 	}
 }
 
+func TestBinomial(t *testing.T) {
+	src := rand.NewSource(1)
+	rng := rand.New(src)
+
+	n := 100000
+	p := 0.004
+	binomial := NewBinomial(n, p, rng)
+	err := testDiscreteDistribution(binomial)
+	if err != nil {
+		t.Error(err)
+	}
+
+	n = 100000
+	p = 0.00004
+	binomial = NewBinomial(n, p, rng)
+	err = testDiscreteDistribution(binomial)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func BenchmarkPoisson(b *testing.B) {
 	b.StopTimer()
 	src := rand.NewSource(1)
