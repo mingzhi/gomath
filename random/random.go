@@ -25,6 +25,12 @@ type RandomEngine interface {
 	Seed(int64)
 }
 
+type ContinuousDistribution interface {
+	Cdf(float64) float64
+	Float64() float64
+	Pdf(float64) float64
+}
+
 type DiscreteDistricution interface {
 	Cdf(k int) float64
 	Int() int

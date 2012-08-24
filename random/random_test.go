@@ -34,7 +34,7 @@ func TestPoisson(t *testing.T) {
 	// < SWITCH_MEAN
 	mean := 9.9998
 	poisson := NewPoisson(mean, rng)
-	err := testDiscretePDF(poisson)
+	err := testDiscreteDistribution(poisson)
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,11 +42,23 @@ func TestPoisson(t *testing.T) {
 	// >= SWITCH_MEAN
 	mean = 99.747564
 	poisson = NewPoisson(mean, rng)
-	err = testDiscretePDF(poisson)
+	err = testDiscreteDistribution(poisson)
 	if err != nil {
 		t.Error(err)
 	}
 
+}
+
+func TestExponential(t *testing.T) {
+	src := rand.NewSource(1)
+	rng := rand.New(src)
+
+	lambda := 2.3
+	exp := NewExponential(lambda, rng)
+	err := testContinuousDistribution(exp)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func BenchmarkPoisson(b *testing.B) {
@@ -61,7 +73,44 @@ func BenchmarkPoisson(b *testing.B) {
 	}
 }
 
-func testDiscretePDF(dd DiscreteDistricution) (err error) {
+func testContinuousDistribution(dd ContinuousDistribution) (err error) {
+	n := 1000000
+	bins := 100
+	count := make([]float64, bins)
+	p := make([]float64, bins)
+
+	var status_i bool
+
+	for i := 0; i < n; i++ {
+		r := dd.Float64()
+		if int(r) >= 0 && int(r) < bins {
+			count[int(r)]++
+		}
+	}
+
+	for i := 0; i < bins; i++ {
+		p[i] = dd.Cdf(float64(i+1)) - dd.Cdf(float64(i)) - dd.Pdf(float64(i))
+	}
+
+	for i := 0; i < bins; i++ {
+		d := math.Abs(count[i] - float64(n)*p[i])
+		if p[i] != 0 {
+			s := d / math.Sqrt(float64(n)*p[i])
+			status_i = (s > 5) && (d > 1)
+		} else {
+			status_i = count[i] != 0
+		}
+
+		if status_i {
+			errmessage := fmt.Sprintf("i=%d (%g observed vs %g expected)", i, count[i]/float64(n), p[i])
+			err = Error{Message: errmessage}
+			return
+		}
+	}
+	return
+}
+
+func testDiscreteDistribution(dd DiscreteDistricution) (err error) {
 	n := 1000000
 	bins := 100
 	count := make([]float64, bins)
