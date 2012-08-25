@@ -24,6 +24,7 @@ import (
 	"github.com/mingzhi/gomath/specfunc"
 	"log"
 	"math"
+	"sync"
 )
 
 const (
@@ -35,7 +36,7 @@ type Poisson struct {
 	Mean float64
 
 	randGenerator RandomEngine
-	stream        chan int
+	locker        sync.Mutex
 
 	// precomputed and cached values (for performance only)
 	// cached for < SWICH_MEAN
@@ -63,9 +64,6 @@ func NewPoisson(mean float64, randGenerator RandomEngine) (poisson *Poisson) {
 	poisson.my_last = -1.0
 	poisson.pp = make([]float64, 36)
 
-	poisson.stream = make(chan int)
-	go poisson.run()
-
 	return
 }
 
@@ -82,21 +80,17 @@ func (poisson Poisson) Pdf(k int) (p float64) {
 
 // Seed uses the provided seed value to initialize the generator to a deterministic state.
 func (poisson *Poisson) Seed(seed int64) {
+	poisson.locker.Lock()
 	poisson.randGenerator.Seed(seed)
+	poisson.locker.Unlock()
 }
 
 // Int returns a non-negative pseudo-random int from a poisson distribution.
 func (poisson *Poisson) Int() (k int) {
-	k = <-poisson.stream
+	poisson.locker.Lock()
+	k = poisson.random()
+	poisson.locker.Unlock()
 	return
-}
-
-// Run keeps generating random number into the channel.
-func (poisson *Poisson) run() {
-	for {
-		k := poisson.random()
-		poisson.stream <- k
-	}
 }
 
 // Generate poisson random number

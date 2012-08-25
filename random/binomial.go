@@ -23,6 +23,7 @@ package random
 import (
 	"github.com/mingzhi/gomath/specfunc"
 	"math"
+	"sync"
 )
 
 // A Binomial distribution.
@@ -32,7 +33,7 @@ type Binomial struct {
 	P float64
 
 	randomGenerator RandomEngine
-	stream          chan int
+	locker          sync.Mutex
 
 	// cache vars for method generateBinomial(...)
 	n_last, n_prev                                        int
@@ -60,9 +61,6 @@ func NewBinomial(n int, p float64, randomGenerator RandomEngine) *Binomial {
 	binomial.log_q = math.Log(1.0 - binomial.P)
 	binomial.log_n = specfunc.LogFactorial(binomial.N)
 
-	binomial.stream = make(chan int)
-	go binomial.run()
-
 	return binomial
 }
 
@@ -73,9 +71,11 @@ func (binomial Binomial) Cdf(k int) (p float64) {
 }
 
 // Int returns a random number from the Binomial distribution.
-func (binomial Binomial) Int() int {
-	k := <-binomial.stream
-	return k
+func (binomial Binomial) Int() (k int) {
+	binomial.locker.Lock()
+	k = binomial.random()
+	binomial.locker.Unlock()
+	return
 }
 
 // Pdf returns the probability distribution function.
@@ -83,14 +83,6 @@ func (binomial Binomial) Pdf(k int) (p float64) {
 	r := binomial.N - k
 	p = math.Exp(binomial.log_n - specfunc.LogFactorial(k) - specfunc.LogFactorial(r) + binomial.log_p*float64(k) + binomial.log_q*float64(r))
 	return
-}
-
-// Run keeps generating random number into the channel.
-func (binomial *Binomial) run() {
-	for {
-		k := binomial.random()
-		binomial.stream <- k
-	}
 }
 
 // Generate a random number from the Binomial distribution.
