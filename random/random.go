@@ -20,9 +20,32 @@
 
 package random
 
-type RandomEngine interface {
-	Float64() float64
-	Seed(int64)
+import (
+	"math/rand"
+	"sync"
+)
+
+type LockedSource struct {
+	lk  sync.Mutex
+	src rand.Source
+}
+
+func NewLockedSource(src rand.Source) rand.Source {
+	r := LockedSource{src: src}
+	return &r
+}
+
+func (r *LockedSource) Int63() (n int64) {
+	r.lk.Lock()
+	n = r.src.Int63()
+	r.lk.Unlock()
+	return
+}
+
+func (r *LockedSource) Seed(seed int64) {
+	r.lk.Lock()
+	r.src.Seed(seed)
+	r.lk.Unlock()
 }
 
 type ContinuousDistribution interface {

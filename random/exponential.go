@@ -2,16 +2,18 @@ package random
 
 import (
 	"math"
+	"math/rand"
 )
 
 type Exponential struct {
 	Lambda          float64
-	randomGenerator RandomEngine
+	randomGenerator *rand.Rand
 }
 
 // NewExponential returns a Exponential distribution with the provided lambda.
-func NewExponential(lambda float64, randomGenerator RandomEngine) *Exponential {
-	exp := Exponential{Lambda: lambda, randomGenerator: randomGenerator}
+func NewExponential(lambda float64, src rand.Source) *Exponential {
+	exp := Exponential{Lambda: lambda}
+	exp.randomGenerator = rand.New(src)
 	return &exp
 }
 

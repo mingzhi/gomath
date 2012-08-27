@@ -29,11 +29,10 @@ import (
 
 func TestPoisson(t *testing.T) {
 	src := rand.NewSource(1)
-	rng := rand.New(src)
 
 	// < SWITCH_MEAN
 	mean := 9.9998
-	poisson := NewPoisson(mean, rng)
+	poisson := NewPoisson(mean, src)
 	err := testDiscreteDistribution(poisson)
 	if err != nil {
 		t.Error(err)
@@ -41,7 +40,7 @@ func TestPoisson(t *testing.T) {
 
 	// >= SWITCH_MEAN
 	mean = 99.747564
-	poisson = NewPoisson(mean, rng)
+	poisson = NewPoisson(mean, src)
 	err = testDiscreteDistribution(poisson)
 	if err != nil {
 		t.Error(err)
@@ -51,10 +50,9 @@ func TestPoisson(t *testing.T) {
 
 func TestExponential(t *testing.T) {
 	src := rand.NewSource(1)
-	rng := rand.New(src)
 
 	lambda := 2.3
-	exp := NewExponential(lambda, rng)
+	exp := NewExponential(lambda, src)
 	err := testContinuousDistribution(exp)
 	if err != nil {
 		t.Error(err)
@@ -63,11 +61,10 @@ func TestExponential(t *testing.T) {
 
 func TestBinomial(t *testing.T) {
 	src := rand.NewSource(1)
-	rng := rand.New(src)
 
 	n := 100000
 	p := 0.004
-	binomial := NewBinomial(n, p, rng)
+	binomial := NewBinomial(n, p, src)
 	err := testDiscreteDistribution(binomial)
 	if err != nil {
 		t.Error(err)
@@ -75,7 +72,7 @@ func TestBinomial(t *testing.T) {
 
 	n = 100000
 	p = 0.00004
-	binomial = NewBinomial(n, p, rng)
+	binomial = NewBinomial(n, p, src)
 	err = testDiscreteDistribution(binomial)
 	if err != nil {
 		t.Error(err)

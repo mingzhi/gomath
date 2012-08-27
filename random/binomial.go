@@ -23,6 +23,7 @@ package random
 import (
 	"github.com/mingzhi/gomath/specfunc"
 	"math"
+	"math/rand"
 	"sync"
 )
 
@@ -32,7 +33,7 @@ type Binomial struct {
 	N int
 	P float64
 
-	randomGenerator RandomEngine
+	randomGenerator *rand.Rand
 	locker          sync.Mutex
 
 	// cache vars for method generateBinomial(...)
@@ -46,11 +47,13 @@ type Binomial struct {
 }
 
 // NewBinomial returns a Binomial distribution.
-func NewBinomial(n int, p float64, randomGenerator RandomEngine) *Binomial {
+func NewBinomial(n int, p float64, src rand.Source) *Binomial {
 	if float64(n)*math.Min(p, 1.0-p) <= 0 {
 		panic("Illegal argument for Binomial distribution: n*p <= 0")
 	}
-	binomial := &Binomial{N: n, P: p, randomGenerator: randomGenerator}
+	binomial := &Binomial{N: n, P: p}
+
+	binomial.randomGenerator = rand.New(src)
 
 	binomial.n_last = -1
 	binomial.n_prev = -1

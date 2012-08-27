@@ -24,6 +24,7 @@ import (
 	"github.com/mingzhi/gomath/specfunc"
 	"log"
 	"math"
+	"math/rand"
 	"sync"
 )
 
@@ -35,7 +36,7 @@ const (
 type Poisson struct {
 	Mean float64
 
-	randGenerator RandomEngine
+	randGenerator *rand.Rand
 	locker        sync.Mutex
 
 	// precomputed and cached values (for performance only)
@@ -55,11 +56,13 @@ type Poisson struct {
 }
 
 // NewPoisson returens a new Poisson with provided mean and random generator.
-func NewPoisson(mean float64, randGenerator RandomEngine) (poisson *Poisson) {
+func NewPoisson(mean float64, src rand.Source) (poisson *Poisson) {
 	if mean < 0 {
 		log.Fatalf("Poisson Mean should >= 0, but we got: %f\n", mean)
 	}
-	poisson = &Poisson{Mean: mean, randGenerator: randGenerator}
+	poisson = &Poisson{Mean: mean}
+
+	poisson.randGenerator = rand.New(src)
 	poisson.my_old = -1.0
 	poisson.my_last = -1.0
 	poisson.pp = make([]float64, 36)
