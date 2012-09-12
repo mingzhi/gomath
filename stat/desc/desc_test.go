@@ -52,7 +52,7 @@ func TestIncrement(t *testing.T) {
 		tolerance float64
 		statistic StorelessUnivariateStatistic
 	)
-	tolerance = 1e-6
+	tolerance = 1e-10
 	// FIRST MOMENT
 	statistic = NewFirstMoment()
 	expected = mean
@@ -63,6 +63,18 @@ func TestIncrement(t *testing.T) {
 	if !assert.EqualFloat64(result, expected, tolerance, 1) {
 		t.Errorf("FirstMoment Increment, result: %.10f, expected: %.10f\n", result, expected)
 	}
+
+	// Mean
+	statistic = NewMean()
+	expected = mean
+	for i := 0; i < len(testArray); i++ {
+		statistic.Increment(testArray[i])
+	}
+	result = statistic.GetResult()
+	if !assert.EqualFloat64(result, expected, tolerance, 1) {
+		t.Errorf("FirstMoment Increment, result: %.10f, expected: %.10f\n", result, expected)
+	}
+
 	// SECOND MOMENT
 	statistic = NewSecondMoment()
 	expected = secondMoment

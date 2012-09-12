@@ -34,10 +34,11 @@ const (
 
 // A Poisson distribution.
 type Poisson struct {
-	Mean float64
+	Mean float64 // mean of poisson distribution
 
-	randGenerator *rand.Rand
-	locker        sync.Mutex
+	randGenerator *rand.Rand // random number generator
+	locked        bool       // whether to use locker or not
+	locker        sync.Mutex // locker for safe thread protection
 
 	// precomputed and cached values (for performance only)
 	// cached for < SWICH_MEAN
@@ -90,10 +91,19 @@ func (poisson *Poisson) Seed(seed int64) {
 
 // Int returns a non-negative pseudo-random int from a poisson distribution.
 func (poisson *Poisson) Int() (k int) {
-	poisson.locker.Lock()
+	if poisson.locked {
+		poisson.locker.Lock()
+		defer poisson.locker.Unlock()
+	}
+
 	k = poisson.random()
-	poisson.locker.Unlock()
+
 	return
+}
+
+// Lock set locker in random number producing produce for safe threading
+func (poisson *Poisson) Lock(locked bool) {
+	poisson.locked = locked
 }
 
 // Generate poisson random number

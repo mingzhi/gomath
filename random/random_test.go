@@ -31,7 +31,7 @@ func TestPoisson(t *testing.T) {
 	src := rand.NewSource(1)
 
 	// < SWITCH_MEAN
-	mean := 9.9998
+	mean := 5.0
 	poisson := NewPoisson(mean, src)
 	err := testDiscreteDistribution(poisson)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestPoisson(t *testing.T) {
 	}
 
 	// >= SWITCH_MEAN
-	mean = 99.747564
+	mean = 30.0
 	poisson = NewPoisson(mean, src)
 	err = testDiscreteDistribution(poisson)
 	if err != nil {
@@ -83,7 +83,7 @@ func BenchmarkPoisson(b *testing.B) {
 	b.StopTimer()
 	src := rand.NewSource(1)
 	rng := rand.New(src)
-	mean := 99.0
+	mean := 30.0
 	poisson := NewPoisson(mean, rng)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -91,8 +91,20 @@ func BenchmarkPoisson(b *testing.B) {
 	}
 }
 
+func BenchmarkBinomial(b *testing.B) {
+	b.StopTimer()
+	src := rand.NewSource(1)
+	n := 100000
+	p := 0.00099
+	binomial := NewBinomial(n, p, src)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		binomial.Int()
+	}
+}
+
 func testContinuousDistribution(dd ContinuousDistribution) (err error) {
-	n := 1000000
+	n := 100000
 	bins := 100
 	count := make([]float64, bins)
 	p := make([]float64, bins)
@@ -129,7 +141,7 @@ func testContinuousDistribution(dd ContinuousDistribution) (err error) {
 }
 
 func testDiscreteDistribution(dd DiscreteDistricution) (err error) {
-	n := 1000000
+	n := 100000
 	bins := 100
 	count := make([]float64, bins)
 	p := make([]float64, bins)

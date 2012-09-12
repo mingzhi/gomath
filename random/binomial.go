@@ -33,8 +33,9 @@ type Binomial struct {
 	N int
 	P float64
 
-	randomGenerator *rand.Rand
-	locker          sync.Mutex
+	randomGenerator *rand.Rand // random number generator
+	locker          sync.Mutex // locker for safe threading
+	locked          bool       // whether to use locker
 
 	// cache vars for method generateBinomial(...)
 	n_last, n_prev                                        int
@@ -75,10 +76,19 @@ func (binomial Binomial) Cdf(k int) (p float64) {
 
 // Int returns a random number from the Binomial distribution.
 func (binomial Binomial) Int() (k int) {
-	binomial.locker.Lock()
+	if binomial.locked {
+		binomial.locker.Lock()
+		defer binomial.locker.Unlock()
+	}
+
 	k = binomial.random()
-	binomial.locker.Unlock()
+
 	return
+}
+
+// Lock function tells whether to use locker for safe threading.
+func (binomial *Binomial) Lock(locked bool) {
+	binomial.locked = locked
 }
 
 // Pdf returns the probability distribution function.
