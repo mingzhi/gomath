@@ -29,7 +29,7 @@ func (exp Exponential) Cdf(x float64) (p float64) {
 
 // Float64 returns a random number from the distribution.
 func (exp Exponential) Float64() float64 {
-	return -math.Exp(exp.randomGenerator.Float64()) / exp.Lambda
+	return rand.ExpFloat64() / exp.Lambda
 }
 
 // Pdf returns the probability distribution function.

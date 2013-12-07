@@ -1,21 +1,21 @@
 //   Copyright (C) 2012 Mingzhi Lin
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
 // Software is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included 
+// The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
 package random
@@ -33,7 +33,7 @@ func TestPoisson(t *testing.T) {
 	// < SWITCH_MEAN
 	mean := 5.0
 	poisson := NewPoisson(mean, src)
-	err := testDiscreteDistribution(poisson)
+	err := testDiscretePDF(poisson)
 	if err != nil {
 		t.Error(err)
 	}
@@ -41,7 +41,7 @@ func TestPoisson(t *testing.T) {
 	// >= SWITCH_MEAN
 	mean = 30.0
 	poisson = NewPoisson(mean, src)
-	err = testDiscreteDistribution(poisson)
+	err = testDiscretePDF(poisson)
 	if err != nil {
 		t.Error(err)
 	}
@@ -53,7 +53,7 @@ func TestExponential(t *testing.T) {
 
 	lambda := 2.3
 	exp := NewExponential(lambda, src)
-	err := testContinuousDistribution(exp)
+	err := testContinuousPDF(exp)
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,7 +65,7 @@ func TestBinomial(t *testing.T) {
 	n := 100000
 	p := 0.004
 	binomial := NewBinomial(n, p, src)
-	err := testDiscreteDistribution(binomial)
+	err := testDiscretePDF(binomial)
 	if err != nil {
 		t.Error(err)
 	}
@@ -73,7 +73,7 @@ func TestBinomial(t *testing.T) {
 	n = 100000
 	p = 0.00004
 	binomial = NewBinomial(n, p, src)
-	err = testDiscreteDistribution(binomial)
+	err = testDiscretePDF(binomial)
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +103,7 @@ func BenchmarkBinomial(b *testing.B) {
 	}
 }
 
-func testContinuousDistribution(dd ContinuousDistribution) (err error) {
+func testContinuousPDF(dd ContinuousDistribution) (err error) {
 	n := 100000
 	bins := 100
 	count := make([]float64, bins)
@@ -140,13 +140,18 @@ func testContinuousDistribution(dd ContinuousDistribution) (err error) {
 	return
 }
 
-func testDiscreteDistribution(dd DiscreteDistricution) (err error) {
+// test discrete distribution PDF.
+// adopted from GSL testing.
+func testDiscretePDF(dd DiscreteDistricution) (err error) {
 	n := 100000
 	bins := 100
-	count := make([]float64, bins)
+	count := make([]int, bins)
 	p := make([]float64, bins)
 
-	var status_i bool
+	var (
+		status_i bool
+		status   bool
+	)
 
 	for i := 0; i < n; i++ {
 		r := dd.Int()
@@ -160,19 +165,28 @@ func testDiscreteDistribution(dd DiscreteDistricution) (err error) {
 	}
 
 	for i := 0; i < bins; i++ {
-		d := math.Abs(count[i] - float64(n)*p[i])
+		d := math.Abs(float64(count[i]) - float64(n)*p[i])
 		if p[i] != 0 {
 			s := d / math.Sqrt(float64(n)*p[i])
 			status_i = (s > 5) && (d > 1)
 		} else {
-			status_i = count[i] != 0
+			status_i = (count[i] != 0)
 		}
 
+		status = (!status_i)
+
 		if status_i {
-			errmessage := fmt.Sprintf("i=%d (%g observed vs %g expected)", i, count[i]/float64(n), p[i])
-			err = Error{Message: errmessage}
+			errmsg := fmt.Sprintf("i=%d (%g observed vs %g expected)", i, float64(count[i])/float64(n), p[i])
+			err = Error{Message: errmsg}
 			return
 		}
 	}
+
+	if !status {
+		errmsg := fmt.Sprintf("sampling against pdf over range [%d,%d]", 0, bins)
+		err = Error{Message: errmsg}
+		return
+	}
+
 	return
 }
