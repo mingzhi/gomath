@@ -4,10 +4,12 @@ import (
 	"math"
 )
 
+// Linage interface defines the agglomeration method to be used.
 type Linakge interface {
 	ComputeDissimilarity(dik, djk, dij, ci, cj, ck float64) float64
 }
 
+// LinageMethod is a wrapper for agglomeration methods.
 type LinakgeMethod struct {
 	Method ComputeDissimilarity
 }
