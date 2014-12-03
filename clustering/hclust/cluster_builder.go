@@ -16,6 +16,7 @@ type ClusterBuilder interface {
 type ClusterMatrixBuilder struct {
 	clusters    [][]int
 	currentStep int
+	distances   []float64
 }
 
 func NewClusterMatrixBuilder(n int) *ClusterMatrixBuilder {
@@ -42,8 +43,13 @@ func (c *ClusterMatrixBuilder) Merge(i, j int, d float64) {
 			c.clusters[c.currentStep][k] = cluster
 		}
 	}
+	c.distances = append(c.distances, d)
 }
 
 func (c *ClusterMatrixBuilder) Clusters() [][]int {
 	return c.clusters
+}
+
+func (c *ClusterMatrixBuilder) Distances() []float64 {
+	return c.distances
 }
