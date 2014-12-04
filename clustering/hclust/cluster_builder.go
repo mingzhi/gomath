@@ -29,6 +29,7 @@ func NewClusterMatrixBuilder(n int) *ClusterMatrixBuilder {
 	c := &ClusterMatrixBuilder{}
 	c.clusters = clusters
 	c.currentStep = 0
+	c.distances = append(c.distances, 0)
 	return c
 }
 
