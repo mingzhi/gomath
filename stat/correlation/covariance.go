@@ -1,6 +1,8 @@
 package correlation
 
 import (
+	"bytes"
+	"fmt"
 	"math"
 )
 
@@ -56,4 +58,18 @@ func (cov *BivariateCovariance) GetResult() float64 {
 
 func (cov *BivariateCovariance) SetBiasCorrelation(bias bool) {
 	cov.biasCorrected = bias
+}
+
+func (cov BivariateCovariance) MarshalBinary() ([]byte, error) {
+	// A simple encoding: plain text.
+	var b bytes.Buffer
+	fmt.Fprintln(&b, cov.meanX, cov.meanY, cov.n, cov.estimator, cov.biasCorrected)
+	return b.Bytes(), nil
+}
+
+func (cov *BivariateCovariance) UnmarshalBinary(data []byte) error {
+	// A simple encoding: plain text.
+	b := bytes.NewBuffer(data)
+	_, err := fmt.Fscanln(b, &cov.meanX, &cov.meanY, &cov.n, &cov.estimator, &cov.biasCorrected)
+	return err
 }

@@ -1,6 +1,8 @@
 package correlation
 
 import (
+	"bytes"
+	"encoding/gob"
 	"math"
 	"testing"
 )
@@ -57,6 +59,39 @@ func TestLonglySimpleVar(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGobEncoding(t *testing.T) {
+	biasCorrected := true
+	c := NewBivariateCovariance(biasCorrected)
+	for i := 0; i < len(longleyDataSimple); i++ {
+		c.Increment(longleyDataSimple[i][0], longleyDataSimple[i][0])
+	}
+
+	var network bytes.Buffer
+	// Create an encoder and send a value.
+	enc := gob.NewEncoder(&network)
+	if err := enc.Encode(c); err != nil {
+		panic(err)
+	}
+
+	// Create a decoder and receive a value.
+	dec := gob.NewDecoder(&network)
+	var c2 BivariateCovariance
+	if err := dec.Decode(&c2); err != nil {
+		panic(err)
+	}
+
+	c.Increment(0.2, 0.3)
+	c2.Increment(0.2, 0.3)
+
+	if c.GetResult() != c.GetResult() {
+		t.Errorf("The orignal and received results are not the same: %f, %f", c.GetResult(), c2.GetResult())
+	}
+
+	if c.GetN() != c.GetN() {
+		t.Errorf("The orignal and received results are not the same: %d, %d", c.GetN(), c2.GetN())
+	}
 }
 
 // Asserts that two floats are equal to within a positive delta.

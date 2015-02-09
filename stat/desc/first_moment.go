@@ -22,6 +22,8 @@
 package desc
 
 import (
+	"bytes"
+	"fmt"
 	"math"
 )
 
@@ -72,4 +74,16 @@ func (fm *FirstMoment) Append(fm2 *FirstMoment) {
 		fm.m1 = (fm.m1*float64(fm.n) + fm2.m1*float64(fm2.n)) / float64(fm.n+fm2.n)
 		fm.n = fm.n + fm2.n
 	}
+}
+
+func (f *FirstMoment) MarshalBinary() ([]byte, error) {
+	var b bytes.Buffer
+	fmt.Fprintln(&b, f.m1, f.dev, f.nDev, f.n)
+	return b.Bytes(), nil
+}
+
+func (f *FirstMoment) UnmarshalBinary(data []byte) error {
+	b := bytes.NewBuffer(data)
+	_, err := fmt.Fscanln(b, &f.m1, &f.dev, &f.nDev, &f.n)
+	return err
 }
