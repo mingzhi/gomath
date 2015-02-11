@@ -49,6 +49,18 @@ func (sm *SecondMoment) Increment(d float64) {
 	sm.m2 += (float64(sm.moment.n) - 1.0) * sm.moment.dev * sm.moment.nDev
 }
 
+func (sm *SecondMoment) Append(s2 *SecondMoment) {
+	delta := sm.moment.GetResult() - s2.moment.GetResult()
+	nA := sm.GetN()
+	nB := s2.GetN()
+	if nA == 0 {
+		sm = s2
+	} else if nB != 0 {
+		sm.moment.Append(s2.moment)
+		sm.m2 += s2.m2 + (delta*delta)*float64(nA*nB)/float64(nA+nB)
+	}
+}
+
 func (sm *SecondMoment) Clear() {
 	sm.moment.Clear()
 	sm.m2 = math.NaN()

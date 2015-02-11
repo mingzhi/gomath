@@ -50,6 +50,10 @@ func (v *Variance) Increment(d float64) {
 	v.moment.Increment(d)
 }
 
+func (v *Variance) Append(v1 *Variance) {
+	v.moment.Append(v1.moment)
+}
+
 func (v *Variance) GetResult() (r float64) {
 	if v.moment.GetN() == 0 {
 		r = math.NaN()
