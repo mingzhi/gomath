@@ -6,7 +6,9 @@ import (
 
 // Estimates an ordinary least squares regression model
 // with one independent variable.
+//
 // y = intercept +slope * x
+//
 // Standard errors for interception and slope are
 // available as well as ANOVA, r-square and Pearson's r statistics.
 type Simple struct {
@@ -45,6 +47,31 @@ func (s *Simple) Add(x, y float64) {
 	s.sumX += x
 	s.sumY += y
 	s.n++
+}
+
+// Appends data from another regression calculation to this one.
+func (s *Simple) Append(reg Simple) {
+	if s.n == 0 {
+		s.xbar = reg.xbar
+		s.ybar = reg.ybar
+		s.sumXX = reg.sumXX
+		s.sumYY = reg.sumYY
+		s.sumXY = reg.sumXY
+	} else {
+		fact1 := float64(reg.n) / float64(reg.n+s.n)
+		fact2 := float64(s.n*reg.n) / float64(s.n+reg.n)
+		dx := reg.xbar - s.xbar
+		dy := reg.ybar - s.ybar
+		s.sumXX += reg.sumXX + dx*dx*fact2
+		s.sumYY += reg.sumYY + dy*dy*fact2
+		s.sumXY += reg.sumXY + dx*dy*fact2
+		s.xbar += dx * fact1
+		s.ybar += dy * fact1
+	}
+
+	s.sumX += reg.sumX
+	s.sumY += reg.sumY
+	s.n += reg.n
 }
 
 // Removes the observation (x,y) from the regression data set.
@@ -139,6 +166,23 @@ func (s *Simple) MeanSquareError() float64 {
 		return math.NaN()
 	}
 	return s.SumSquaredErrors() / float64(s.N()-2)
+}
+
+// Returns the "predicted" y value associated with
+// the supplied x value, based on the data that has been
+// added to the model when this method is actived.
+//
+// predict(x) = intercept + slope * x
+//
+// Preconditions:
+//
+// At least two observations (with at least two different x values)
+// must have been added before invoking this method. If this method is
+// invoked before a model can be estimated, NaN, is returned.
+func (s *Simple) Predict(x float64) {
+	b1 := s.Slope()
+	b0 := s.Intercept()
+	return b0 + b1*x
 }
 
 // Returns <a href="http://mathworld.wolfram.com/CorrelationCoefficient.html">
