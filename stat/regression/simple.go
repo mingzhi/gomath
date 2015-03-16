@@ -179,7 +179,7 @@ func (s *Simple) MeanSquareError() float64 {
 // At least two observations (with at least two different x values)
 // must have been added before invoking this method. If this method is
 // invoked before a model can be estimated, NaN, is returned.
-func (s *Simple) Predict(x float64) {
+func (s *Simple) Predict(x float64) float64 {
 	b1 := s.Slope()
 	b0 := s.Intercept()
 	return b0 + b1*x
