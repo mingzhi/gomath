@@ -71,7 +71,10 @@ func (fm *FirstMoment) GetN() int {
 
 func (fm *FirstMoment) Append(fm2 *FirstMoment) {
 	if fm.n == 0 {
-		fm = fm2
+		fm.n = fm2.n
+		fm.m1 = fm2.m1
+		fm.dev = fm2.dev
+		fm.nDev = fm2.nDev
 	} else if fm2.GetN() != 0 {
 		fm.m1 = (fm.m1*float64(fm.n) + fm2.m1*float64(fm2.n)) / float64(fm.n+fm2.n)
 		fm.n = fm.n + fm2.n
