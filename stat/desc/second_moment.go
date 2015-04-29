@@ -54,7 +54,8 @@ func (sm *SecondMoment) Append(s2 *SecondMoment) {
 	nA := sm.GetN()
 	nB := s2.GetN()
 	if nA == 0 {
-		sm = s2
+		sm.moment.Append(s2.moment)
+		sm.m2 = s2.m2
 	} else if nB != 0 {
 		sm.moment.Append(s2.moment)
 		sm.m2 += s2.m2 + (delta*delta)*float64(nA*nB)/float64(nA+nB)
