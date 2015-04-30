@@ -31,11 +31,13 @@ func (cov *BivariateCovariance) Increment(x, y float64) {
 func (cov *BivariateCovariance) Append(cov2 *BivariateCovariance) {
 	oldN := cov.n
 	cov.n += cov2.n
-	deltaX := cov2.meanX - cov.meanX
-	deltaY := cov2.meanY - cov.meanY
-	cov.meanX += deltaX * float64(cov2.n) / float64(cov.n)
-	cov.meanY += deltaY * float64(cov2.n) / float64(cov.n)
-	cov.estimator += cov2.estimator + float64(oldN)*float64(cov2.n)/float64(cov.n)*deltaX*deltaY
+	if cov.n > 0 {
+		deltaX := cov2.meanX - cov.meanX
+		deltaY := cov2.meanY - cov.meanY
+		cov.meanX += deltaX * float64(cov2.n) / float64(cov.n)
+		cov.meanY += deltaY * float64(cov2.n) / float64(cov.n)
+		cov.estimator += cov2.estimator + float64(oldN)*float64(cov2.n)/float64(cov.n)*deltaX*deltaY
+	}
 }
 
 func (cov *BivariateCovariance) GetN() int {
