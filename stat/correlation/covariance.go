@@ -58,6 +58,14 @@ func (cov *BivariateCovariance) GetResult() float64 {
 	}
 }
 
+func (b *BivariateCovariance) MeanX() float64 {
+	return b.meanX
+}
+
+func (b *BivariateCovariance) MeanY() float64 {
+	return b.meanY
+}
+
 func (cov *BivariateCovariance) SetBiasCorrelation(bias bool) {
 	cov.biasCorrected = bias
 }
