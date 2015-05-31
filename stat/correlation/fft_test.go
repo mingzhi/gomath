@@ -1,6 +1,7 @@
 package correlation
 
 import (
+	"github.com/mingzhi/fftw"
 	"math"
 	"math/rand"
 	"testing"
@@ -38,6 +39,7 @@ func TestAutoCorr(t *testing.T) {
 }
 
 func TestXCorr(t *testing.T) {
+
 	data1 := []float64{
 		0.6557,
 		0.0357,
@@ -62,6 +64,10 @@ func TestXCorr(t *testing.T) {
 		0.7922,
 		0.9595,
 	}
+
+	dft := NewFFTW(len(data1), fftw.OutOfPlace, fftw.Measure)
+	defer dft.Close()
+
 	var expected []float64
 	for _, circular := range []bool{true, false} {
 		if circular {
@@ -71,15 +77,19 @@ func TestXCorr(t *testing.T) {
 		}
 		res1 := XCorrBruteForce(data1, data2, circular)
 		res2 := XCorrFFT(data1, data2, circular)
-		if len(res1) != len(res2) {
+		res3 := dft.XCorr(data1, data2, circular)
+		if len(res1) != len(res2) || len(res1) != len(res3) {
 			t.Errorf("Results 1 length of %d, results 2 length of %d, circular is %v\n", len(res1), len(res2), circular)
 		}
 		for i := 0; i < len(expected); i++ {
 			if math.Abs(res1[i]-res2[i]) > tolerance {
-				t.Errorf("Result 1 %f, result 2 %f, at %d, circular is %v\n", res2[i], res1[i], i, circular)
+				t.Errorf("Result 2 %f, result 1 %f, at %d, circular is %v\n", res2[i], res1[i], i, circular)
 			}
 			if math.Abs(res1[i]-expected[i]) > tolerance {
 				t.Errorf("Expected %f, got %f, at %d, circular is %v\n", expected[i], res1[i], i, circular)
+			}
+			if math.Abs(res1[i]-res3[i]) > tolerance {
+				t.Errorf("Result 3 %f, result 1 %f, at %d, circular is %v\n", res3[i], res1[i], i, circular)
 			}
 		}
 	}
