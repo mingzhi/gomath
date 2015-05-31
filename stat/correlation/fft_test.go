@@ -97,6 +97,19 @@ func TestXCorr(t *testing.T) {
 
 }
 
+func BenchmarkFFTWAuto(b *testing.B) {
+	data := make([]float64, 510)
+	for i := 0; i < len(data); i++ {
+		data[i] = rand.Float64()
+	}
+	circular := true
+	dft := NewFFTW(len(data), fftw.OutOfPlace, fftw.Measure, circular)
+	for i := 0; i < b.N; i++ {
+
+		dft.AutoCorr(data)
+	}
+}
+
 func BenchmarkFFTAuto(b *testing.B) {
 	data := make([]float64, 510)
 	for i := 0; i < len(data); i++ {
