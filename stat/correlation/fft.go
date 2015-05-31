@@ -54,13 +54,9 @@ func NewFFTW(n int, locality fftw.Locality, planFlags fftw.PlanFlag, circular bo
 	// zero padding.
 	ftlength := n
 	if !circular {
-		length := n * 2
-		var i uint32 = 1
-		for ftlength < length {
-			ftlength = 1 << i
-			i++
-		}
+		ftlength = n * 2
 	}
+
 	var f FFTW
 	f.foward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Forward, locality, planFlags)
 	f.backward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Backward, locality, planFlags)
@@ -79,13 +75,13 @@ func (f *FFTW) AutoCorr(x []float64) []float64 {
 func (f *FFTW) XCorr(x1, x2 []float64) []float64 {
 	var v1, v2 []complex128
 
-	copy(f.foward.Real, x1)
+	copy(f.foward.Real, x2)
 	f.foward.Execute()
 	for i := 0; i < len(f.foward.Complex); i++ {
 		v1 = append(v1, f.foward.Complex[i])
 	}
 
-	copy(f.foward.Real, x2)
+	copy(f.foward.Real, x1)
 	f.foward.Execute()
 	for i := 0; i < len(f.foward.Complex); i++ {
 		v2 = append(v2, f.foward.Complex[i])
