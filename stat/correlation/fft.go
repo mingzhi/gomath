@@ -84,7 +84,7 @@ func (f *FFTW) XCorr(x1, x2 []float64, circular bool) []float64 {
 		datax1[i] = x2[i%len(x2)]
 		datax2[i] = x1[i%len(x1)]
 	}
-
+	
 	var v1, v2 []complex128
 
 	copy(f.foward.Real, datax1)
@@ -107,10 +107,11 @@ func (f *FFTW) XCorr(x1, x2 []float64, circular bool) []float64 {
 
 	copy(f.backward.Complex, temp)
 	f.backward.Execute()
+	totl := len(f.backward.Real)
 
 	res := []float64{}
 	for i := 0; i < len(x1); i++ {
-		res = append(res, f.backward.Real[i])
+		res = append(res, f.backward.Real[i]/float64(totl))
 	}
 	return res
 }
