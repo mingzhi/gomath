@@ -50,10 +50,20 @@ type FFTW struct {
 	backward fftw.HCDFT1DPlan
 }
 
-func NewFFTW(n int, locality fftw.Locality, planFlags fftw.PlanFlag) *FFTW {
+func NewFFTW(n int, locality fftw.Locality, planFlags fftw.PlanFlag, circular bool) *FFTW {
+	// zero padding.
+	ftlength := n
+	if !circular {
+		length := n * 2
+		var i uint32 = 1
+		for ftlength < length {
+			ftlength = 1 << i
+			i++
+		}
+	}
 	var f FFTW
-	f.foward = fftw.NewHCDFT1D(uint(n), nil, nil, fftw.Forward, locality, planFlags)
-	f.backward = fftw.NewHCDFT1D(uint(n), nil, nil, fftw.Backward, locality, planFlags)
+	f.foward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Forward, locality, planFlags)
+	f.backward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Backward, locality, planFlags)
 	return &f
 }
 
@@ -62,38 +72,20 @@ func (f *FFTW) Close() {
 	f.backward.Close()
 }
 
-func (f *FFTW) AutoCorr(x []float64, circular bool) []float64 {
-	return f.XCorr(x, x, circular)
+func (f *FFTW) AutoCorr(x []float64) []float64 {
+	return f.XCorr(x, x)
 }
 
-func (f *FFTW) XCorr(x1, x2 []float64, circular bool) []float64 {
-	// zero padding.
-	ftlength := len(x1)
-	if !circular {
-		length := len(x1) * 2
-		var i uint32 = 1
-		for ftlength < length {
-			ftlength = 1 << i
-			i++
-		}
-	}
-
-	datax1 := make([]float64, ftlength)
-	datax2 := make([]float64, ftlength)
-	for i := 0; i < len(x1); i++ {
-		datax1[i] = x2[i%len(x2)]
-		datax2[i] = x1[i%len(x1)]
-	}
-	
+func (f *FFTW) XCorr(x1, x2 []float64) []float64 {
 	var v1, v2 []complex128
 
-	copy(f.foward.Real, datax1)
+	copy(f.foward.Real, x1)
 	f.foward.Execute()
 	for i := 0; i < len(f.foward.Complex); i++ {
 		v1 = append(v1, f.foward.Complex[i])
 	}
 
-	copy(f.foward.Real, datax2)
+	copy(f.foward.Real, x2)
 	f.foward.Execute()
 	for i := 0; i < len(f.foward.Complex); i++ {
 		v2 = append(v2, f.foward.Complex[i])

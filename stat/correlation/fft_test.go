@@ -65,9 +65,6 @@ func TestXCorr(t *testing.T) {
 		0.9595,
 	}
 
-	dft := NewFFTW(len(data1), fftw.OutOfPlace, fftw.Measure)
-	defer dft.Close()
-
 	var expected []float64
 	for _, circular := range []bool{true, false} {
 		if circular {
@@ -75,9 +72,13 @@ func TestXCorr(t *testing.T) {
 		} else {
 			expected = []float64{3.41092, 3.86624, 3.40214, 2.79604, 3.00792, 2.27675, 1.87809, 1.44342, 0.5537, 0.629144}
 		}
+
+		dft := NewFFTW(len(data1), fftw.OutOfPlace, fftw.Measure, circular)
+		defer dft.Close()
+
 		res1 := XCorrBruteForce(data1, data2, circular)
 		res2 := XCorrFFT(data1, data2, circular)
-		res3 := dft.XCorr(data1, data2, circular)
+		res3 := dft.XCorr(data1, data2)
 		if len(res1) != len(res2) || len(res1) != len(res3) {
 			t.Errorf("Results 1 length of %d, results 2 length of %d, circular is %v\n", len(res1), len(res2), circular)
 		}
