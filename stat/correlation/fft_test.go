@@ -73,7 +73,7 @@ func TestXCorr(t *testing.T) {
 			expected = []float64{3.41092, 3.86624, 3.40214, 2.79604, 3.00792, 2.27675, 1.87809, 1.44342, 0.5537, 0.629144}
 		}
 
-		dft := NewFFTW(len(data1), fftw.OutOfPlace, fftw.Measure, circular)
+		dft := NewFFTW(len(data1), circular)
 		defer dft.Close()
 
 		res1 := XCorrBruteForce(data1, data2, circular)
@@ -103,7 +103,7 @@ func BenchmarkFFTWAuto(b *testing.B) {
 		data[i] = rand.Float64()
 	}
 	circular := true
-	dft := NewFFTW(len(data), fftw.OutOfPlace, fftw.Measure, circular)
+	dft := NewFFTW(len(data), circular)
 	for i := 0; i < b.N; i++ {
 
 		dft.AutoCorr(data)

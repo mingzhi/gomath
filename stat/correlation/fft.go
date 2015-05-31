@@ -50,16 +50,19 @@ type FFTW struct {
 	backward fftw.HCDFT1DPlan
 }
 
-func NewFFTW(n int, locality fftw.Locality, planFlags fftw.PlanFlag, circular bool) *FFTW {
+func NewFFTW(n int, circular bool) *FFTW {
 	// zero padding.
 	ftlength := n
 	if !circular {
 		ftlength = n * 2
 	}
 
+	locality := fftw.OutOfPlace
+	planFlag := fftw.Measure
+
 	var f FFTW
-	f.foward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Forward, locality, planFlags)
-	f.backward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Backward, locality, planFlags)
+	f.foward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Forward, locality, planFlag)
+	f.backward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Backward, locality, planFlag)
 	return &f
 }
 
