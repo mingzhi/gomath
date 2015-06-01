@@ -1,7 +1,6 @@
 package correlation
 
 import (
-	"github.com/mingzhi/fftw"
 	"math"
 	"math/rand"
 	"testing"

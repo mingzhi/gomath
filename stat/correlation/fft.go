@@ -1,7 +1,6 @@
 package correlation
 
 import (
-	"github.com/mingzhi/fftw"
 	"github.com/mjibson/go-dsp/fft"
 	"math/cmplx"
 )
@@ -41,68 +40,6 @@ func XCorrFFT(x1, x2 []float64, circular bool) []float64 {
 	res := []float64{}
 	for i := 0; i < len(x1); i++ {
 		res = append(res, real(v3[i]))
-	}
-	return res
-}
-
-type FFTW struct {
-	foward   fftw.HCDFT1DPlan
-	backward fftw.HCDFT1DPlan
-}
-
-func NewFFTW(n int, circular bool) *FFTW {
-	// zero padding.
-	ftlength := n
-	if !circular {
-		ftlength = n * 2
-	}
-
-	locality := fftw.OutOfPlace
-	planFlag := fftw.Measure
-
-	var f FFTW
-	f.foward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Forward, locality, planFlag)
-	f.backward = fftw.NewHCDFT1D(uint(ftlength), nil, nil, fftw.Backward, locality, planFlag)
-	return &f
-}
-
-func (f *FFTW) Close() {
-	f.foward.Close()
-	f.backward.Close()
-}
-
-func (f *FFTW) AutoCorr(x []float64) []float64 {
-	return f.XCorr(x, x)
-}
-
-func (f *FFTW) XCorr(x1, x2 []float64) []float64 {
-	var v1, v2 []complex128
-
-	copy(f.foward.Real, x2)
-	f.foward.Execute()
-	for i := 0; i < len(f.foward.Complex); i++ {
-		v1 = append(v1, f.foward.Complex[i])
-	}
-
-	copy(f.foward.Real, x1)
-	f.foward.Execute()
-	for i := 0; i < len(f.foward.Complex); i++ {
-		v2 = append(v2, f.foward.Complex[i])
-	}
-
-	temp := []complex128{}
-	for i := 0; i < len(v1); i++ {
-		v := v1[i] * cmplx.Conj(v2[i])
-		temp = append(temp, v)
-	}
-
-	copy(f.backward.Complex, temp)
-	f.backward.Execute()
-	totl := len(f.backward.Real)
-
-	res := []float64{}
-	for i := 0; i < len(x1); i++ {
-		res = append(res, f.backward.Real[i]/float64(totl))
 	}
 	return res
 }
